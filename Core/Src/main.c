@@ -27,7 +27,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usb_vcp.h"
+#include "as5047p.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +55,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -97,14 +98,26 @@ int main(void)
   MX_SPI3_Init();
   MX_USB_DEVICE_Init();
   MX_TIM10_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-
+	AS5047P_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		AS5047P_StartDMA_Read();
+		AS5047P_ProcessData();
+		if(encoder_data.is_valid)
+        {
+            uint16_t raw = AS5047P_GetRawAngle();
+            float deg = AS5047P_GetAngleDeg();
+					VCP_Printf("Angle: %0.2f  RAW:%0.2f\r\n ", deg,raw);
+        }
+		
+		HAL_Delay(10);
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -133,10 +146,10 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 15;
-  RCC_OscInitStruct.PLL.PLLN = 144;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 5;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -151,13 +164,21 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     Error_Handler();
   }
 }
 
 /* USER CODE BEGIN 4 */
+
+// SPI DMA callback
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi->Instance == SPI1) {
+        AS5047P_ProcessData();
+    }
+}
 
 /* USER CODE END 4 */
 
