@@ -29,6 +29,11 @@
 /* USER CODE BEGIN Includes */
 #include "usb_vcp.h"
 #include "as5047p.h"
+#include "vofa.h"
+#include "current_loop.h"
+#include "speed_loop.h"
+#include "filter.h"
+#include "position_loop.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +60,9 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+
+LPF_Handle_t speed_lpf;
+
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
 /* USER CODE END PFP */
 
@@ -100,23 +108,53 @@ int main(void)
   MX_TIM10_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-	AS5047P_Init();
+
+       __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
+    HAL_GPIO_WritePin(AS5047P_NSS_GPIO_Port, AS5047P_NSS_Pin, GPIO_PIN_SET);  
+     __HAL_TIM_ENABLE(&htim1);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+
+    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+    HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
+    __HAL_TIM_ENABLE_IT(&htim1,TIM_IT_UPDATE);
+//    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, 2);
+    HAL_ADCEx_InjectedStart_IT(&hadc1);
+    
+    HAL_Delay(2000);
+    HAL_GPIO_WritePin(DRV8301_EN_GATE_GPIO_Port,DRV8301_EN_GATE_Pin,GPIO_PIN_SET);
+    Speed_Loop_Init();
+    current_pi_init();
+    static uint32_t cnt = 0;
+Pos_Loop_Init(&pid_pos);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		AS5047P_StartDMA_Read();
-		AS5047P_ProcessData();
-		if(encoder_data.is_valid)
-        {
-            uint16_t raw = AS5047P_GetRawAngle();
-            float deg = AS5047P_GetAngleDeg();
-					VCP_Printf("Angle: %0.2f  RAW:%0.2f\r\n ", deg,raw);
-        }
+//      as5047p_read_dma_start();
+//		cnt++;
+//      if(cnt >1000)
+//      {
+//          pid_iq.Ref = 0.4f;
+//        pid_iq.Ref = 0.0f;
+//      }
+//      if(cnt >1000)
+//      {
+//          pid_iq.Ref = 0.0f;
+//        cnt = 0;
+//      }
+//    vofa_data[20] = (float)cnt;
+
+            VOFA_Send_JustFloat(vofa_data,22);
+//			VCP_Printf("RAW: %d \r\n ",angle_raw);
+        
 		
-		HAL_Delay(10);
+//		HAL_Delay(10);
 		
     /* USER CODE END WHILE */
 
@@ -176,7 +214,7 @@ void SystemClock_Config(void)
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if(hspi->Instance == SPI1) {
-        AS5047P_ProcessData();
+        as5047_data_process();
     }
 }
 

@@ -1,0 +1,10 @@
+vesc6_v4\foc_math.o: ..\USER\foc_math.c
+vesc6_v4\foc_math.o: ..\USER\foc_math.h
+vesc6_v4\foc_math.o: E:/STM32cubeMX/Repository/Packs/STMicroelectronics/X-CUBE-ALGOBUILD/1.4.0/Middlewares/Third_Party/ARM/DSP/Inc/arm_math.h
+vesc6_v4\foc_math.o: E:/STM32cubeMX/Repository/STM32Cube_FW_F4_V1.28.3/Drivers/CMSIS/Include/cmsis_compiler.h
+vesc6_v4\foc_math.o: E:\keil_MDK\ARM\ARMCC\Bin\..\include\stdint.h
+vesc6_v4\foc_math.o: E:/STM32cubeMX/Repository/STM32Cube_FW_F4_V1.28.3/Drivers/CMSIS/Include/cmsis_armcc.h
+vesc6_v4\foc_math.o: E:\keil_MDK\ARM\ARMCC\Bin\..\include\string.h
+vesc6_v4\foc_math.o: E:\keil_MDK\ARM\ARMCC\Bin\..\include\math.h
+vesc6_v4\foc_math.o: E:\keil_MDK\ARM\ARMCC\Bin\..\include\float.h
+vesc6_v4\foc_math.o: E:\keil_MDK\ARM\ARMCC\Bin\..\include\limits.h
