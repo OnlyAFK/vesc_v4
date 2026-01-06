@@ -9,14 +9,12 @@ ipark_t ipark1_t = {0};
 clarke_t clarke1_t = {0};
 park_t park1_t = {0};
 
-void clarke_calc(clarke_t *pClarke)
-{
+void clarke_calc(clarke_t *pClarke) {
     pClarke->Alpha = pClarke->Ia;
     pClarke->Beta  = ONE_BY_SQRT3 * (pClarke->Ia + 2.0f * pClarke->Ib);
 }
 
-void park_calc(park_t *pPark)
-{
+void park_calc(park_t *pPark) {
     float sin_val = 0.0f;
     float cos_val = 0.0f;
     
@@ -27,8 +25,7 @@ void park_calc(park_t *pPark)
     pPark->Q = -pPark->Alpha * sin_val + pPark->Beta * cos_val;
 }
 
-void ipark_calc(ipark_t *pIPark)
-{
+void ipark_calc(ipark_t *pIPark) {
     float sin_val = 0.0f;
     float cos_val = 0.0f;
     
@@ -39,8 +36,7 @@ void ipark_calc(ipark_t *pIPark)
     pIPark->Beta  = pIPark->D * sin_val + pIPark->Q * cos_val;
 }
 
-void iclarke_calc(iclarke_t *pIClarke)
-{
+void iclarke_calc(iclarke_t *pIClarke) {
     float term_beta = pIClarke->Beta * SQRT3_BY_2;  // sqrt(3)*0.5f*Beta
     float term_alpha_half = pIClarke->Alpha * 0.5f; // 0.5f*Alpha
 

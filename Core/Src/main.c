@@ -150,7 +150,7 @@ Pos_Loop_Init(&pid_pos);
 //      }
 //    vofa_data[20] = (float)cnt;
 
-            VOFA_Send_JustFloat(vofa_data,22);
+            VOFA_Send_JustFloat(vofa_data,23);
 //			VCP_Printf("RAW: %d \r\n ",angle_raw);
         
 		

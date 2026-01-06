@@ -21,7 +21,6 @@
 "vesc6_v4\vofa.o"
 "vesc6_v4\current_loop.o"
 "vesc6_v4\speed_loop.o"
-"vesc6_v4\filter.o"
 "vesc6_v4\position_loop.o"
 "vesc6_v4\stm32f4xx_hal_pcd.o"
 "vesc6_v4\stm32f4xx_hal_pcd_ex.o"

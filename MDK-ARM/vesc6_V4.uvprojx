@@ -519,14 +519,14 @@
               <FilePath>..\USER\speed_loop.c</FilePath>
             </File>
             <File>
-              <FileName>filter.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\filter.c</FilePath>
-            </File>
-            <File>
               <FileName>position_loop.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\position_loop.c</FilePath>
+            </File>
+            <File>
+              <FileName>focmotor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\USER\focmotor.h</FilePath>
             </File>
           </Files>
         </Group>

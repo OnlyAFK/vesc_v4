@@ -3,45 +3,36 @@
 #include "arm_math.h"
 #include "main.h"
 
-/* SPI句柄，CubeMX自动生成的 */
 extern SPI_HandleTypeDef hspi1; 
 
 uint16_t tx_buffer = 0x3FFF; 
 uint16_t rx_buffer = 0;
 uint16_t angle_raw = 0;
 
-#define POLE_PAIRS   7u          // 极对数
+#define POLE_PAIRS   7u          
 #define RAW_MAX      16384.0f    // 14-bit 最大码值+1
-#define ZERO_OFFSET  0.386563f// 0.386563
-#define TWO_PI              6.2831853f
+#define ZERO_OFFSET  0.386563f
+#define TWO_PI       6.2831853f
 float elec_theta;
 float mech_theta;
 int direction_flag = 1.0;
 
-static inline float _norm_angle(float x)   // 0~2π 工具函数
-{
+static inline float _norm_angle(float x) {
     return fmodf(x + 2.0f*PI, 2.0f*PI);
 }
 
-void as5047p_read_dma_start(void)
-{
-    // 1. 拉低片选，选中传感器
+void as5047p_read_dma_start(void) {
     HAL_GPIO_WritePin(AS5047P_NSS_GPIO_Port, AS5047P_NSS_Pin, GPIO_PIN_RESET);
-
-    // 2. 启动DMA传输 (发送命令同时接收数据)
-    // 注意：这里发送和接收都是1个数据长度（因为我们配置了16bit Data Size）
     HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t*)&tx_buffer, (uint8_t*)&rx_buffer, 1);
 }
 
-void as5047_data_process(void)
-{
+void as5047_data_process(void) {
     HAL_GPIO_WritePin(AS5047P_NSS_GPIO_Port, AS5047P_NSS_Pin, GPIO_PIN_SET);
     angle_raw = rx_buffer & 0x3FFF;
     mech_theta = direction_flag * angle_raw * (2.0f * PI / RAW_MAX);
     mech_theta = _norm_angle(mech_theta);
     elec_theta = (mech_theta - ZERO_OFFSET) * POLE_PAIRS;
     elec_theta = _norm_angle(elec_theta);
-
 }
 
 

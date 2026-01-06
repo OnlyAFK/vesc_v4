@@ -6,7 +6,6 @@ typedef struct {
     float ActualRPM;    // 实际转速 (RPM)
     float FilteredRPM;  // 滤波后的转速 (RPM)
     
-    // PID 参数
     float Kp;
     float Ki;
     float Integral;
@@ -20,8 +19,9 @@ extern Speed_PID_t pid_spd;
 extern float speed_filter_const; // 滤波系数 (0.0~1.0)
 
 void Speed_Loop_Init(void);
-void Speed_Calc(float theta_mech_now); // 传入当前的机械角度 (弧度 0~2pi)
+void Speed_Calc(float theta_mech_now); 
 void Speed_PID_Calc(void);
+void Speed_Calc_PLL(float theta_now, float Ts);
 
 #endif
 

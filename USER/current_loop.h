@@ -20,5 +20,6 @@ void current_calc(PI_Controller_t *pPI);
 
 extern PI_Controller_t pid_id;
 extern PI_Controller_t pid_iq;
+
 #endif
 
