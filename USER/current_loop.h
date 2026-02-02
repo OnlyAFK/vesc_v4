@@ -1,25 +1,44 @@
+/**
+ * @file    current_loop.h
+ * @brief   ?????? (???)
+ * @note    ?????????????????? pid.h ? foc_core.h
+ */
+
 #ifndef __CURRENT_LOOP_H_
 #define __CURRENT_LOOP_H_
 
-typedef struct {
-    float Ref;          // 目标值 (期望电流, Unit: A)
-    float Fdb;          // 反馈值 (实际电流, Unit: A)
-    
-    float Kp;           // 比例系数
-    float Ki;           // 积分系数
-    
-    float Integral;     // 积分项累加器
-    
-    float Out;          // PID输出 (电压, Unit: V)
-    float Out_Max;      // 输出上限 (通常是 Udc / sqrt(3))
-    float Out_Min;      // 输出下限
-} PI_Controller_t;
+#include "pid.h"
 
-void current_pi_init(void);
-void current_calc(PI_Controller_t *pPI);
+/*============================================================================*/
+/*                    ??????????                                      */
+/*============================================================================*/
+
+/* ?? PI ?????? - ????? */
+typedef PID_Controller_t PI_Controller_t;
+
+/* ????? PID_t ?? */
+typedef PID_Controller_t PID_t;
+
+/*============================================================================*/
+/*                    ??????????                                      */
+/*============================================================================*/
 
 extern PI_Controller_t pid_id;
 extern PI_Controller_t pid_iq;
 
-#endif
+/*============================================================================*/
+/*                    ????????                                          */
+/*============================================================================*/
 
+/**
+ * @brief  ?????? PI ??? (????)
+ */
+void current_pi_init(void);
+
+/**
+ * @brief  ????? (????)
+ * @param  pPI: PI ?????
+ */
+void current_calc(PI_Controller_t *pPI);
+
+#endif /* __CURRENT_LOOP_H_ */

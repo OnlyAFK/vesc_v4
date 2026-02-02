@@ -1,12 +1,35 @@
+/**
+ * @file    as5047p.h
+ * @brief   AS5047P 磁编码器驱动 (兼容层)
+ * @note    此文件保留用于向后兼容，新代码请使用 motor_hw.h
+ */
+
 #ifndef __AS5047P_H
 #define __AS5047P_H
 
-#include "stdint.h"
-void as5047p_read_dma_start(void);
-void as5047_data_process(void);
-extern uint16_t rx_buffer;
-extern uint16_t angle_raw;
-extern float elec_theta;
-extern float mech_theta;
+#include <stdint.h>
 
-#endif
+/*============================================================================*/
+/*                    兼容旧代码的全局变量                                      */
+/*============================================================================*/
+
+extern uint16_t rx_buffer;      // SPI 接收缓冲
+extern uint16_t angle_raw;      // 原始角度值 (0~16383)
+extern float elec_theta;        // 电角度 (rad)
+extern float mech_theta;        // 机械角度 (rad)
+
+/*============================================================================*/
+/*                    兼容旧代码的函数                                          */
+/*============================================================================*/
+
+/**
+ * @brief  启动 DMA 读取编码器
+ */
+void as5047p_read_dma_start(void);
+
+/**
+ * @brief  处理编码器数据 (在 SPI DMA 回调中调用)
+ */
+void as5047_data_process(void);
+
+#endif /* __AS5047P_H */

@@ -1,28 +1,68 @@
+/**
+ * @file    speed_loop.h
+ * @brief   ?????? (???)
+ * @note    ?????????????????? pid.h, pll.h ? foc_core.h
+ */
+
 #ifndef __SPEED_LOOP_H
 #define __SPEED_LOOP_H
 
+#include "pid.h"
+#include "pll.h"
+
+/*============================================================================*/
+/*                    ??????????                                      */
+/*============================================================================*/
+
+/**
+ * @brief ??? PID ??? (????)
+ */
 typedef struct {
-    float TargetRPM;    // 目标转速 (RPM)
-    float ActualRPM;    // 实际转速 (RPM)
-    float FilteredRPM;  // 滤波后的转速 (RPM)
+    float TargetRPM;    // ???? (RPM)
+    float ActualRPM;    // ???? (RPM)
+    float FilteredRPM;  // ?????? (RPM)
     
     float Kp;
     float Ki;
     float Integral;
-    float Out_Max;      // 输出限制 (即最大允许电流 A)
+    float Out_Max;      // ???? (??????? A)
     float Out_Min;
     
-    float Out;          // PID输出 (目标电流 Iq_ref)
+    float Out;          // PID?? (???? Iq_ref)
 } Speed_PID_t;
 
-extern Speed_PID_t pid_spd;
-extern float speed_filter_const; // 滤波系数 (0.0~1.0)
+/*============================================================================*/
+/*                    ??????????                                      */
+/*============================================================================*/
 
+extern Speed_PID_t pid_spd;
+extern float speed_filter_const;
+
+/*============================================================================*/
+/*                    ????????                                          */
+/*============================================================================*/
+
+/**
+ * @brief  ??????
+ */
 void Speed_Loop_Init(void);
-void Speed_Calc(float theta_mech_now); 
+
+/**
+ * @brief  ???? (???)
+ * @param  theta_mech_now: ?????? (rad)
+ */
+void Speed_Calc(float theta_mech_now);
+
+/**
+ * @brief  ??? PID ??
+ */
 void Speed_PID_Calc(void);
+
+/**
+ * @brief  PLL ????
+ * @param  theta_now: ?????? (rad)
+ * @param  Ts: ???? (s)
+ */
 void Speed_Calc_PLL(float theta_now, float Ts);
 
-#endif
-
-
+#endif /* __SPEED_LOOP_H */

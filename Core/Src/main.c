@@ -27,13 +27,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usb_vcp.h"
-#include "as5047p.h"
+#include "foc_core.h"
 #include "vofa.h"
-#include "current_loop.h"
-#include "speed_loop.h"
-#include "filter.h"
-#include "position_loop.h"
+#include "usb_vcp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,13 +57,20 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-LPF_Handle_t speed_lpf;
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/**
+ * @brief  SPI DMA 传输完成回调 (编码器读取)
+ */
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if (hspi->Instance == SPI1) {
+        FOC_EncoderCallback(&g_Motor);
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -109,53 +112,48 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
-       __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
-    HAL_GPIO_WritePin(AS5047P_NSS_GPIO_Port, AS5047P_NSS_Pin, GPIO_PIN_SET);  
-     __HAL_TIM_ENABLE(&htim1);
+    /*--- 初始化 FOC 控制器 ---*/
+    FOC_Init(&g_Motor);
+    
+    /*--- 启动 PWM ---*/
+    __HAL_TIM_ENABLE(&htim1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
-
+    
     HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
     HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-    __HAL_TIM_ENABLE_IT(&htim1,TIM_IT_UPDATE);
-//    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, 2);
+    
+    /*--- 启动 ADC 注入转换 (触发 FOC 控制循环) ---*/
+    __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE);
     HAL_ADCEx_InjectedStart_IT(&hadc1);
     
+    /*--- 等待上电稳定 ---*/
     HAL_Delay(2000);
-    HAL_GPIO_WritePin(DRV8301_EN_GATE_GPIO_Port,DRV8301_EN_GATE_Pin,GPIO_PIN_SET);
-    Speed_Loop_Init();
-    current_pi_init();
-    static uint32_t cnt = 0;
-Pos_Loop_Init(&pid_pos);
+    
+    /*--- 使能电机驱动 ---*/
+    FOC_Start(&g_Motor);
+    
+    /*--- 设置控制模式和目标 ---*/
+    FOC_SetMode(&g_Motor, FOC_MODE_POSITION);
+    FOC_SetTargetPosition(&g_Motor, 3.14f);     // 目标位置: π rad
+    
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//      as5047p_read_dma_start();
-//		cnt++;
-//      if(cnt >1000)
-//      {
-//          pid_iq.Ref = 0.4f;
-//        pid_iq.Ref = 0.0f;
-//      }
-//      if(cnt >1000)
-//      {
-//          pid_iq.Ref = 0.0f;
-//        cnt = 0;
-//      }
-//    vofa_data[20] = (float)cnt;
-
-            VOFA_Send_JustFloat(vofa_data,23);
-//			VCP_Printf("RAW: %d \r\n ",angle_raw);
+        /*--- 发送 VOFA 调试数据 ---*/
+        VOFA_Send_JustFloat(vofa_data, 23);
         
-		
-//		HAL_Delay(10);
-		
+        /*--- 可在此处添加用户控制逻辑 ---*/
+        // 例如: 根据USB接收的命令修改目标值
+        // FOC_SetTargetSpeed(&g_Motor, new_speed);
+        // FOC_SetTargetPosition(&g_Motor, new_position);
+        
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -210,14 +208,6 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-// SPI DMA callback
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-    if(hspi->Instance == SPI1) {
-        as5047_data_process();
-    }
-}
-
 /* USER CODE END 4 */
 
 /**
@@ -228,6 +218,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+    FOC_EmergencyStop(&g_Motor);
   __disable_irq();
   while (1)
   {

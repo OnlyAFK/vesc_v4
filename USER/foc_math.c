@@ -1,46 +1,85 @@
+/**
+ * @file    foc_math.c
+ * @brief   FOC 坐标变换数学库实现
+ * @note    纯算法实现，无硬件依赖，可移植
+ */
+
 #include "foc_math.h"
-#include "arm_math.h" 
+#include "arm_math.h"   /* 使用 CMSIS-DSP 优化的三角函数 */
 
-#define ONE_BY_SQRT3    0.57735026919f  // 1 / sqrt(3)
-#define SQRT3_BY_2      0.86602540378f  // sqrt(3) / 2
-#define SQRT3           1.73205080756f // sqrt(3)
+/*============================================================================*/
+/*                    兼容旧代码的全局变量 (逐步废弃)                            */
+/*============================================================================*/
 
-ipark_t ipark1_t = {0};
-clarke_t clarke1_t = {0};
-park_t park1_t = {0};
+Clarke_t clarke1_t = {0};
+Park_t park1_t = {0};
+InvPark_t ipark1_t = {0};
 
-void clarke_calc(clarke_t *pClarke) {
-    pClarke->Alpha = pClarke->Ia;
-    pClarke->Beta  = ONE_BY_SQRT3 * (pClarke->Ia + 2.0f * pClarke->Ib);
+/*============================================================================*/
+/*                              函数实现                                       */
+/*============================================================================*/
+
+/**
+ * @brief  Clarke 变换 (等幅值变换)
+ * @note   使用两相输入重建三相:
+ *         Alpha = Ia
+ *         Beta  = (Ia + 2*Ib) / sqrt(3)
+ */
+void Clarke_Calc(Clarke_t *clarke)
+{
+    clarke->Alpha = clarke->Ia;
+    clarke->Beta  = FOC_ONE_BY_SQRT3 * (clarke->Ia + 2.0f * clarke->Ib);
 }
 
-void park_calc(park_t *pPark) {
-    float sin_val = 0.0f;
-    float cos_val = 0.0f;
+/**
+ * @brief  Park 变换
+ * @note   将静止 αβ 坐标系变换到旋转 dq 坐标系
+ *         D =  Alpha * cos(θ) + Beta * sin(θ)
+ *         Q = -Alpha * sin(θ) + Beta * cos(θ)
+ */
+void Park_Calc(Park_t *park)
+{
+    float sin_val, cos_val;
     
-    sin_val = arm_sin_f32(pPark->theta);
-    cos_val = arm_cos_f32(pPark->theta);
+    /* 使用 CMSIS-DSP 优化的三角函数 */
+    sin_val = arm_sin_f32(park->Theta);
+    cos_val = arm_cos_f32(park->Theta);
     
-    pPark->D =  pPark->Alpha * cos_val + pPark->Beta * sin_val;
-    pPark->Q = -pPark->Alpha * sin_val + pPark->Beta * cos_val;
+    park->D =  park->Alpha * cos_val + park->Beta * sin_val;
+    park->Q = -park->Alpha * sin_val + park->Beta * cos_val;
 }
 
-void ipark_calc(ipark_t *pIPark) {
-    float sin_val = 0.0f;
-    float cos_val = 0.0f;
+/**
+ * @brief  逆 Park 变换
+ * @note   将旋转 dq 坐标系变换到静止 αβ 坐标系
+ *         Alpha = D * cos(θ) - Q * sin(θ)
+ *         Beta  = D * sin(θ) + Q * cos(θ)
+ */
+void InvPark_Calc(InvPark_t *invpark)
+{
+    float sin_val, cos_val;
     
-    sin_val = arm_sin_f32(pIPark->theta);
-    cos_val = arm_cos_f32(pIPark->theta);
+    /* 使用 CMSIS-DSP 优化的三角函数 */
+    sin_val = arm_sin_f32(invpark->Theta);
+    cos_val = arm_cos_f32(invpark->Theta);
     
-    pIPark->Alpha = pIPark->D * cos_val - pIPark->Q * sin_val;
-    pIPark->Beta  = pIPark->D * sin_val + pIPark->Q * cos_val;
+    invpark->Alpha = invpark->D * cos_val - invpark->Q * sin_val;
+    invpark->Beta  = invpark->D * sin_val + invpark->Q * cos_val;
 }
 
-void iclarke_calc(iclarke_t *pIClarke) {
-    float term_beta = pIClarke->Beta * SQRT3_BY_2;  // sqrt(3)*0.5f*Beta
-    float term_alpha_half = pIClarke->Alpha * 0.5f; // 0.5f*Alpha
-
-    pIClarke->Va = pIClarke->Alpha;
-    pIClarke->Vb = -term_alpha_half + term_beta;
-    pIClarke->Vc = -term_alpha_half - term_beta;
+/**
+ * @brief  逆 Clarke 变换
+ * @note   将 αβ 坐标系变换到 abc 三相
+ *         Va = Alpha
+ *         Vb = -0.5*Alpha + sqrt(3)/2*Beta
+ *         Vc = -0.5*Alpha - sqrt(3)/2*Beta
+ */
+void InvClarke_Calc(InvClarke_t *invclarke)
+{
+    float term_alpha_half = invclarke->Alpha * 0.5f;
+    float term_beta = invclarke->Beta * FOC_SQRT3_BY_2;
+    
+    invclarke->Va = invclarke->Alpha;
+    invclarke->Vb = -term_alpha_half + term_beta;
+    invclarke->Vc = -term_alpha_half - term_beta;
 }
