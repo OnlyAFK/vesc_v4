@@ -1,0 +1,18 @@
+# Keil MDK-ARM: 不提交工程/选项/界面文件，避免远端拉取后头文件路径报错
+MDK-ARM/*.uvoptx
+MDK-ARM/*.uvguix.*
+MDK-ARM/DebugConfig/
+MDK-ARM/RTE/
+
+# Keil 编译产物（保留 startup_stm32f405xx.s 源码）
+MDK-ARM/vesc6_V4/
+MDK-ARM/startup_stm32f405xx.lst
+
+# 工程文件含绝对路径，每人本地不同，不推
+MDK-ARM/*.uvprojx
+
+# 其他常见忽略
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
